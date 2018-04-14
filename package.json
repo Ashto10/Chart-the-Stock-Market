@@ -1,6 +1,6 @@
 {
   "name": "stock-market-charter",
-  "version": "0.8.0",
+  "version": "1.0.0",
   "description": "A simple full stack that allows users to share stock data with one another.",
   "scripts": {
     "start": "node server.js "
