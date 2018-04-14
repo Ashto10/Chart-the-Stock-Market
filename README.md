@@ -13,6 +13,9 @@ More information about the challenge can be found [at FreeCodeCamp](https://www.
 ###### Possible improvements
 1. Sanitize inputs both client and serverside
 1. Actual visual layout
+1. Store data temporarily to limit calls to API
+1. Error messages for unknown stocks
+1. Display daily stock data
 
 --------------------------
 Made by [Gustavo Guarino](https://www.gustavoguarino.com)

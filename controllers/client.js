@@ -3,23 +3,16 @@
   var stocks = {};
   
   var margin = {
-    top: 30,
-    right: 20,
-    bottom: 30,
-    left: 55
-  },
-      chartWidth = 500 - margin.left - margin.right,
-      chartHeight = 200 - margin.top - margin.bottom,
-      closeMin = chartHeight,
-      closeMax= 0,
-      minDate = new Date();
+    top: 15,
+    right: 15,
+    bottom: 25,
+    left: 60
+  }
   
-  var chart = d3.select("svg")
-      .attr('width', chartWidth + margin.left + margin.right)
-      .attr('height', chartHeight + margin.top + margin.bottom)
-      .style('background', 'whitesmoke')
-    .append('g')
-      .attr('transform','translate('+margin.left+','+margin.top+')')
+  var chartWidth = 500 - margin.left - margin.right,
+      chartHeight = 300 - margin.top - margin.bottom,
+      closeMin = chartHeight,
+      closeMax= 0;
   
   var ordinalScale = d3.scaleOrdinal()
   .range(d3.schemePaired);
@@ -28,158 +21,229 @@
       .range([0,chartHeight]);
     
   var xScale = d3.scaleTime()
-      .range([0,chartWidth]);
+      .range([0,chartWidth])
+      .clamp(true);
+  
+  var lineGenerator = d3.line()
+      .x(function(d,i) {
+        return xScale(new Date(d.date));
+      })
+      .y(function(d) {
+        return yScale(d.close);
+      });
+  
+  var format = d3.format(",.2f");
   
   var ws = new WebSocket('wss://legend-turret.glitch.me/');
   var heartbeat;
   
-  function removeStockLocally(stock) {
-    $('#' + stock).remove();
-    delete stocks[stock];
-    closeMin = chartHeight;
-    closeMax= 0;
-    minDate = new Date();
-    updateStocks();
-    
+  function sendMessage(msg) {
+    ws.send(JSON.stringify(msg));
   }
   
-  function updateStocks() {
-    Object.keys(stocks).forEach(function(key) {
-      closeMin = closeMin < stocks[key].minClose ? closeMin : stocks[key].minClose;
-      closeMax = closeMax > stocks[key].maxClose ? closeMax : stocks[key].maxClose;
-      minDate = new Date(minDate).getTime() < new Date(stocks[key].minDate).getTime() ? minDate : stocks[key].minDate;
-    })
+  function dateButton(el, span, start) {
     
-    chart.selectAll('g').remove();
-    
-    var t = d3.transition()
-      .duration(750);
-    
-    xScale.domain([new Date(minDate), new Date()]);
-    yScale.domain([closeMax * 1.3,closeMin * 0.7]);
-    ordinalScale.domain(d3.keys(stocks));
-    
-    chart.append("g")
-      .attr("transform", "translate(" + 0 + ",0)")
-      .call(
-        d3.axisLeft(yScale)
-          .tickFormat(function (d) {
-            return `$${d}.00`;
-          })
-          .ticks(6)
-      );
-    
-    chart.append("g")
-      .attr("transform", "translate(0," + chartHeight + ")")
-      .call(d3.axisBottom(xScale));
-    
-    var lineGenerator = d3.line()
-        .x(function(d,i) {
-          return xScale(new Date(d.date));
+    var label = el.append('label')
+        .attr('class','btn btn-sm btn-secondary')
+        .classed('active', start)
+        .on('click', function (d) {
+          changeMinDate(d, span);
         })
-        .y(function(d) {
-          return yScale(d.close);
+      
+    label.append('input')
+        .attr('type','radio')
+        .attr('name','date')
+        .attr('autocomplete', 'off')
+        
+    
+    label.append('span')
+        .text(span)
+  }
+  
+  function createLocalCharts() {
+    var chartContainer = d3.select('#individual-charts')
+      .selectAll('.chart')
+      .data(d3.keys(stocks), function (d) { return d });
+    
+    chartContainer.exit().remove();
+        
+    var chartContainerEnter = chartContainer.enter().insert('div', ".add-stock")
+        .attr('class', 'offset-sm-1 col-sm-10 offset-md-0 col-md-6 col-lg-4')
+      .append('div')
+        .attr('class', 'chart')
+        .attr('id', function(d) { return d });
+    
+    var headerEnter = chartContainerEnter
+      .append('div')
+        .attr('class', 'chart-header rounded-top')
+    
+    headerEnter.append('span')
+        .attr('class','stock-symbol')
+        .text(function(d) { return d });
+   
+    headerEnter.append('btn')
+        .attr('class', 'remove-btn btn btn-danger btn-sm')
+        .html('&times;')
+        .on('click', function (d) {
+          sendMessage({command: "REMOVE", stock: d})
         });
     
-    var update = chart.selectAll('.line')
-      .data(d3.keys(stocks), function (d) { return d});
+    headerEnter.append('div')
+        .attr('class','date-controls btn-group btn-group-toggle')
+        .attr('data-toggle', 'buttons')
+        .call(dateButton, 'All')
+        .call(dateButton, 'Year')
+        .call(dateButton, 'Month', true)
+        .call(dateButton, 'Week')
     
-    update.exit()
-      .transition(t)
-        .style("opacity", 0)
-        .remove();
+    var svgContainer = chartContainerEnter.append('div')
+        .attr('class','svg-container');
     
-    update
+    svgContainer.append('div')
+        .attr('class','loading')
+      .append('div')
+        .attr('class', 'loading-icon');
+      
+    var svg = svgContainer.append('svg')
+        .attr('preserveAspectRatio','xMinYMin meet')
+        .attr('viewBox', "0 0 " + (chartWidth + margin.left + margin.right) + " " + (chartHeight + margin.top + margin.bottom))
+      .append('g')
+        .attr('class', 'chart-contents')
+        .attr('transform', 'translate('+ margin.left +','+ margin.top +')')
+    
+    svg.append('g')
+        .attr('class', 'grid x-grid')
+        .attr("transform", "translate("+ chartWidth +", 0)")
+    
+    svg.append('g')
+        .attr('class', 'grid y-grid')
+        .attr("transform", "translate(0," + chartHeight + ")")
+    
+    svg.append('path')
+        .attr('class', 'line')
+    
+    svg.append('g')
+        .attr('class', 'axis x-axis')
+    
+    svg.append('g')
+        .attr('class', 'axis y-axis')
+  }
+  
+  function updateLocalChart(stock) {
+    
+    var localData = stocks[stock].weeklyData.filter(function (d) {
+        return moment(d.date).isAfter(stocks[stock].dateView);
+    });
+    
+    xScale.domain([stocks[stock].dateView, new Date()])
+    yScale.domain([d3.max(localData.map(function(d) {return d.close})) * 1.3,d3.min(localData.map(function(d) {return d.close})) * 0.7]);
+    
+    var chart = d3.select('#' + stock);
+    chart.select('.loading').remove();
+    
+    var chartContents = chart.select('.chart-contents');
+    
+    chartContents.select('.line')
+        .attr('d', function(d) {
+            if (stocks[d].weeklyData !== undefined) {
+              return lineGenerator(localData);
+            }
+          })
+        .attr('stroke', function (d) { return ordinalScale(d) })
         .attr('stroke-width', 2)
         .attr('fill', 'none')
-        .attr('class','line')
-      .transition(t)
-        .attr('stroke', function(d) { return ordinalScale(d) })
-        .attr('d', function(d) {
-          return lineGenerator(stocks[d].weeklyData);  
-        })
+        .attr('class', 'line');
     
-    // Enter
-    update.enter()
-      .append('path')
-        .attr('d', function(d) {
-          return lineGenerator(stocks[d].weeklyData);  
-        })
-        .attr('stroke', function(d) { return ordinalScale(d) })
-        .attr('stroke-width', 2)
-        .attr('fill', 'none')
-        .attr('class','line')
-        .style("opacity", 0)
-      .transition(t)
-        .style("opacity", 1)
-        
+    chartContents.select(".x-grid")
+      .call(d3.axisLeft(yScale)
+          .ticks(6)
+          .tickSize(chartWidth)
+          .tickFormat("")
+      )
+    
+    chartContents.select(".y-grid")
+      .call(d3.axisBottom(xScale)
+          .ticks(6)
+          .tickSize(-chartHeight)
+          .tickFormat("")
+      )
+      
+    chartContents.select('.x-axis')
+        .attr("transform", "translate(0," + chartHeight + ")")
+        .call(d3.axisBottom(xScale).ticks(6));
+    
+    chartContents.select('.y-axis')
+        .attr("transform", "translate(" + 0 + ",0)")
+        .call(d3.axisLeft(yScale)
+          .tickFormat(function (d) {
+            return "$" + format(d);
+          })
+          .ticks(6)
+        );
+  }
+  
+  function changeMinDate(stock, span) {
+    if(stocks[stock] === '') { return; }
+    
+    if (span === 'All') {
+      var s = stocks[stock].weeklyData;
+      stocks[stock].dateView = new Date(s[s.length - 1].date);
+    } else {
+      stocks[stock].dateView = moment().subtract(1, span);
+    }
+    
+    updateLocalChart(stock)
   }
 
-  // event emmited when connected
-  ws.onopen = function () {
-    console.log('websocket is connected ...')
-
-    // sending a send event to websocket server
-    ws.send(JSON.stringify({command: "FETCH"}));
+  ws.onopen = function () {    
+    sendMessage({command: 'STARTUP'});
     
-    // keep connection open and update
     heartbeat = setInterval(function() {
-      ws.send(JSON.stringify({command: null}));
-    }, 30000);
+      sendMessage({command: 'PING'});
+    }, 10000);
 
-    // ws.close();
+  }
+  
+  function removeLocalChart(stock) {
+    var d = d3.select('#' + stock).select(function () { return this.parentNode} ).remove()
   }
 
-  // event emmited when receiving message 
   ws.onmessage = function (ev) {
-    var response = JSON.parse(ev.data);
-    if (response.type === null) {
-      return;
+    var res = JSON.parse(ev.data);
+    var command = res.command;
+    
+    if (command === "ADD") {
+      if (!(res.stock in stocks)) {
+        stocks[res.stock] = '';
+        createLocalCharts();
+      }
     }
     
-    if (response.type === "REMOVE") {
-      removeStockLocally(response.symbol);
+    if (command === "UPDATE") {
+      if (res.stock in stocks) {
+        stocks[res.stock] = res.data;
+        changeMinDate(res.stock, 'month');
+      }
     }
     
-    if (response.type === "UPDATE") {
-      if (!(response.symbol in stocks)) {
-        stocks[response.symbol] = response.stockData;
-        
-        var title = $('<span>').text(response.symbol.toUpperCase());
-        var button = $('<a>').attr({class: 'remove'}).html('&times;');
-        var stock = $('<div>')
-            .attr({
-              id: response.symbol,
-              class: 'col-sm-6 col-md-3'
-            })
-          .append(title)
-          .append(button);
-        $('#stocks-container').append(stock);
-        
-        updateStocks();
+    if (command === "REMOVE") {
+      if (res.stock in stocks) {
+        delete stocks[res.stock];
+        removeLocalChart(res.stock);
       }
     }
   }
   
   window.onbeforeunload = function() {
-    console.log('Closing connection');
     ws.onclose = function () {}; // disable onclose handler first
     clearInterval(heartbeat);
     ws.close()
   };
   
   $("#addSymbol").on('click', function() {
-    var call = {command: "ADD", data: $('#symbol').val()}
-    ws.send(JSON.stringify(call));
-    $('#symbol').val('');
-  });
-  
-  $(document).on('click', '.remove', function() {
-    var stockToRemove = $(this).parent().attr('id');
-    var call = {command: "REMOVE", data: stockToRemove}
-    ws.send(JSON.stringify(call));
-    
-    removeStockLocally(stockToRemove);
+    let stock = $('#input-stock').val();
+     $('#input-stock').val('')
+    sendMessage({command: "ADD", stock: stock});
   });
   
 })()

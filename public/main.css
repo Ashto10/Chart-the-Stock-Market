@@ -1,0 +1,124 @@
+body {
+  background: #E0F5FF;
+}
+
+.loading {
+  display: block;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.loading-icon, .loading-icon:before, .loading-icon:after {
+  content: '';
+  display: inline-block;
+  position: absolute;
+  left: 50%;
+  border-radius: 100%;
+  top: 37%;
+  width: 40px;
+  height: 40px;
+  background: white;
+  animation: bounce 1s infinite ease-in-out alternate;
+}
+
+.loading-icon:before {
+  top: 10%;
+  left: -200%;
+  animation-delay: 1s;
+}
+
+.loading-icon:after {
+  top: 10%;
+  left: 200%;
+  animation-delay: 1s;
+}
+
+@keyframes bounce {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  
+  100% {
+    transform: translateY(20px) scale(0.7);
+    opacity: 0.7;
+  }
+}
+
+.chart, .add-chart {
+  margin: 10px;
+  margin-bottom: 20px;
+}
+
+.chart-header, .svg-container {
+  background: #1A171B;
+}
+
+.chart-header {
+  display: block;
+  background: #809387;
+  width: 100%;
+  height: 38px;
+  padding: 3px 3px 6px;
+}
+
+.chart-header .stock-symbol {
+  color: #1A171B;
+  font-size: 130%;
+  margin-left: 0.75em;
+  line-height: 32px;
+}
+
+.date-controls {
+  float: right;
+}
+
+.date-button {
+  
+}
+
+.remove-btn {
+  float: right;
+  margin-left: 20px;
+  margin-right: 5px;
+}
+
+.svg-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+svg {
+  width: 100%;
+  height: 100%;
+}
+
+svg .axis path,
+svg .axis line {
+  stroke: #6D739A
+}
+
+svg .grid line {
+  stroke: #222643;
+}
+
+svg .grid path {
+  stroke: none;
+}
+
+svg text {
+  fill: whitesmoke;
+}
+
+.chart-body {
+  background: #1A171B;
+  text-align: center;
+  padding: 50px 0;
+}
+
+.chart-body h2 {
+  color: #EDEFF2;
+  margin-bottom: 1em;
+}

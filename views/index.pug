@@ -4,17 +4,22 @@ html(lang="en")
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no")
     link(rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous")
+    link(rel="stylesheet" href="/public/main.css" type="text/css")
   body
     .container-fluid
-      svg#chart
-    .container
-      h1 Tracked Stocks
-      .row#stocks-container
-      p Add new symbol
-      input(id="symbol" name="symbol" type="text")
-      a(id="addSymbol") Add
+      #individual-charts.row
+        .add-stock.offset-sm-1.col-sm-10.offset-md-0.col-md-6.col-lg-4
+          .add-chart
+            .chart-header.rounded-top 
+            .chart-body
+              h2 Add stock to watchlist
+              form.form-inline.justify-content-center
+                label(for="input-stock").sr-only Stock Symbol
+                input(id="input-stock" name="input-stock" type="text" placeholder="stock symbol").form-control.mb-2.mr-sm-2
+                button(id="addSymbol" type="button").btn.btn-primary.mb-2 Add
     script(src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous")
     script(src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous")
     script(src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous")
     script(src="https://d3js.org/d3.v5.min.js")
+    script(src="https://cdn.jsdelivr.net/npm/moment@2.22.0/moment.min.js")
     script(src="/controllers/client.js")
