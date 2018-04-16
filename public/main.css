@@ -13,7 +13,7 @@ body {
   content: '';
   display: inline-block;
   position: absolute;
-  left: 50%;
+  left: 47%;
   border-radius: 100%;
   top: 37%;
   width: 40px;
@@ -22,16 +22,19 @@ body {
   animation: bounce 1s infinite ease-in-out alternate;
 }
 
-.loading-icon:before {
+.loading-icon:before,
+.loading-icon:after {
   top: 10%;
-  left: -200%;
   animation-delay: 1s;
+  background: whitesmoke;
+}
+
+.loading-icon:before {
+  left: -200%;
 }
 
 .loading-icon:after {
-  top: 10%;
   left: 200%;
-  animation-delay: 1s;
 }
 
 @keyframes bounce {
@@ -115,10 +118,24 @@ svg text {
 .chart-body {
   background: #1A171B;
   text-align: center;
-  padding: 50px 0;
+  padding: 50px 30px;
 }
 
 .chart-body h2 {
   color: #EDEFF2;
   margin-bottom: 1em;
+}
+
+.chart-error {
+  overflow: hidden;
+  text-align: center;
+  color: whitesmoke;
+}
+
+.chart-error h1 {
+  margin-top: 1em;
+}
+
+.chart-error small {
+  color: gray;
 }

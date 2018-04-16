@@ -42,8 +42,8 @@ module.exports = function (app, serverData, aWss) {
 
         return resolve(stockData);
 
-      });
-    }).catch(err => console.log('Error:', err));
+      }).catch(err => reject(err));
+    });
   }
   
   function addStock(recipiant, symbol) {
@@ -58,8 +58,10 @@ module.exports = function (app, serverData, aWss) {
         sendMessage(recipiant,response);
       }, (Math.random() * 5) * 1000);
     }).catch(err => {
+      console.log('Error:' + err);
       let response = {
         command: 'ERROR',
+        stock: symbol,
         error: err
       }
       sendMessage(recipiant,response);
