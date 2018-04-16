@@ -204,8 +204,11 @@
 
   }
   
-  function removeLocalChart(stock) {
-    var d = d3.select('#' + stock).select(function () { return this.parentNode} ).remove()
+  function deleteStock(stock) {
+    if (stock in stocks) {
+      delete stocks[stock];
+      d3.select('#' + stock).select(function () { return this.parentNode} ).remove()
+    }
   }
 
   ws.onmessage = function (ev) {
@@ -226,11 +229,26 @@
       }
     }
     
+    if (command === "ERROR") {
+      var d = d3.select('#' + res.stock).select('.loading')
+      d.select('.loading-icon').remove();
+      
+      var err = d.append('div')
+        .attr('class', 'chart-error')
+      
+      err.append('h1')
+        .text('Unable to connect to AlphaVantage.');
+      
+      err.append('p')
+        .text('This chart will remove itself momentarily');
+      
+      setTimeout(function() {
+        deleteStock(res.stock);
+      },10000);
+    }
+    
     if (command === "REMOVE") {
-      if (res.stock in stocks) {
-        delete stocks[res.stock];
-        removeLocalChart(res.stock);
-      }
+      deleteStock(res.stock);
     }
   }
   
@@ -243,7 +261,7 @@
   $("#addSymbol").on('click', function() {
     let stock = $('#input-stock').val();
      $('#input-stock').val('')
-    sendMessage({command: "ADD", stock: stock});
+    sendMessage({command: "ADD", stock: stock.toUpperCase()});
   });
   
 })()
